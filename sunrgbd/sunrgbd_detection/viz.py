@@ -99,9 +99,7 @@ np.random.shuffle(shuffled_keys)
 #for img_id in [264,403]+shuffled_keys:
 for img_id in shuffled_keys:
     calib = dataset.get_calibration(img_id)
-    
     pred_list = pred_map[img_id]
-
     gt_box3d_list = box3d_map[img_id]
     gt_box2d_list = box2d_map[img_id]
     gt_cls_list = type_map[img_id]

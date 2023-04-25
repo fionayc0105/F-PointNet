@@ -173,7 +173,11 @@ def inverse_rigid_trans(Tr):
 
 def read_sunrgbd_label(label_filename):
     lines = [line.rstrip() for line in open(label_filename)]
-    objects = [SUNObject3d(line) for line in lines]
+    print(len(lines))
+    if len(lines) > 0:
+        objects = [SUNObject3d(line) for line in lines]
+    else :
+        objects = []
     return objects
 
 def load_image(img_filename):
@@ -198,7 +202,13 @@ def random_shift_box2d(box2d, shift_ratio=0.1):
     h2 = h*(1+np.random.random()*2*r-r) # 0.9 to 1.1
     w2 = w*(1+np.random.random()*2*r-r) # 0.9 to 1.1
     return np.array([cx2-w2/2.0, cy2-h2/2.0, cx2+w2/2.0, cy2+h2/2.0])
- 
+
+def in_hull(p, hull):
+    from scipy.spatial import Delaunay
+    if not isinstance(hull,Delaunay):
+        hull = Delaunay(hull)
+    return hull.find_simplex(p)>=0
+
 def extract_pc_in_box3d(pc, box3d):
     ''' pc: (N,3), box3d: (8,3) '''
     box3d_roi_inds = in_hull(pc[:,0:3], box3d)
@@ -256,6 +266,12 @@ def compute_orientation_3d(obj, calib):
     # project orientation into the image plane
     orientation_2d,_ = calib.project_upright_depth_to_image(np.transpose(orientation_3d))
     return orientation_2d, np.transpose(orientation_3d)
+def draw_label(image, x, y, label, color_label, color_text=(255,255,255)):
+    (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+    # Prints the text.
+    image = cv2.rectangle(image, (int(x), int(y - 20)), (int(x + w), int(y)), color_label, -1)
+    image = cv2.putText(image, label, (int(x), int(y - 5)), cv2.FONT_HERSHEY_COMPLEX, 0.6, color_text, 1)
+    return image
 
 def draw_projected_box3d(image, qs, color=(255,255,255), thickness=2):
     ''' Draw 3d bounding box in image
@@ -272,24 +288,24 @@ def draw_projected_box3d(image, qs, color=(255,255,255), thickness=2):
     for k in range(0,4):
        #http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html
        i,j=k,(k+1)%4
-       cv2.line(image, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.CV_AA) # use LINE_AA for opencv3
+       cv2.line(image, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.LINE_AA) # use LINE_AA for opencv3
 
        i,j=k+4,(k+1)%4 + 4
-       cv2.line(image, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.CV_AA)
+       cv2.line(image, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.LINE_AA)
 
        i,j=k,k+4
-       cv2.line(image, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.CV_AA)
+       cv2.line(image, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.LINE_AA)
     return image
 
 
-import cPickle
+import pickle
 import gzip
 
 def save_zipped_pickle(obj, filename, protocol=-1):
     with gzip.open(filename, 'wb') as f:
-        cPickle.dump(obj, f, protocol)
+        pickle.dump(obj, f, protocol)
 
 def load_zipped_pickle(filename):
     with gzip.open(filename, 'rb') as f:
-        loaded_object = cPickle.load(f)
+        loaded_object = pickle.load(f)
         return loaded_object

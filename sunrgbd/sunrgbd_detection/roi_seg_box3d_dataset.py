@@ -1,5 +1,5 @@
 ''' Provider class for RoI binary segmentation task '''
-import cPickle as pickle
+import pickle
 import sys
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -191,7 +191,7 @@ class ROISegBoxDataset(object):
         self.rotate_to_center = rotate_to_center
         self.one_hot = one_hot
         if overwritten_data_path is None:
-            overwritten_data_path = os.path.join(BASE_DIR, '%s_1002.zip.pickle'%(split))
+            overwritten_data_path = os.path.join(BASE_DIR, '%s_0419.zip.pickle'%(split))
 
         self.from_rgb_detection = from_rgb_detection
         if from_rgb_detection:

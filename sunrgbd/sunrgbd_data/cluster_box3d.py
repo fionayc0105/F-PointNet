@@ -8,9 +8,9 @@ with open('box3d_dimensions.pickle','rb') as fp:
 
 import numpy as np
 box3d_pts = np.vstack(dimension_list)
-print box3d_pts.shape
+print(box3d_pts.shape)
 
-print set(type_list)
+print(set(type_list))
 raw_input()
 
 
@@ -25,7 +25,7 @@ for class_type in sorted(set(type_list)):
             box3d_list.append(dimension_list[i])
     #print class_type, cnt, box3d/float(cnt)
     median_box3d = np.median(box3d_list,0)
-    print "\'%s\': np.array([%f,%f,%f])," % (class_type, median_box3d[0]*2, median_box3d[1]*2, median_box3d[2]*2)
+    print("\'%s\': np.array([%f,%f,%f])," % (class_type, median_box3d[0]*2, median_box3d[1]*2, median_box3d[2]*2))
     median_box3d_list.append(median_box3d)
 raw_input()
 

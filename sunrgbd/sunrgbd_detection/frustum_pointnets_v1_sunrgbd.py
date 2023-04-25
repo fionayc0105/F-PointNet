@@ -62,14 +62,14 @@ def get_model(point_cloud, one_hot_vec, is_training, bn_decay=None):
                          scope='conv5', bn_decay=bn_decay)
     global_feat = tf_util.max_pool2d(net, [num_point,1],
                                      padding='VALID', scope='maxpool')
-    print global_feat
+    print(global_feat)
 
     global_feat = tf.concat([global_feat, tf.expand_dims(tf.expand_dims(one_hot_vec, 1), 1)], axis=3)
-    print 'Global Feat: ', global_feat
+    print ('Global Feat: ', global_feat)
     global_feat_expand = tf.tile(global_feat, [1, num_point, 1, 1])
-    print point_feat, global_feat_expand
+    print(point_feat, global_feat_expand)
     concat_feat = tf.concat(axis=3, values=[point_feat, global_feat_expand])
-    print concat_feat
+    print (concat_feat)
 
     net = tf_util.conv2d(concat_feat, 512, [1,1],
                          padding='VALID', stride=[1,1],
@@ -93,25 +93,25 @@ def get_model(point_cloud, one_hot_vec, is_training, bn_decay=None):
                          padding='VALID', stride=[1,1], activation_fn=None,
                          scope='conv10')
     logits = tf.squeeze(logits, [2]) # BxNxC
-    print logits
+    print (logits)
     
-    print '-----------'
+    print( '-----------')
     #net = tf.concat(axis=3, values=[net, tf.expand_dims(tf.slice(point_cloud, [0,0,0], [-1,-1,3]), 2)])
     mask = tf.slice(logits,[0,0,0],[-1,-1,1]) < tf.slice(logits,[0,0,1],[-1,-1,1])
     mask = tf.to_float(mask) # BxNx1
     mask_count = tf.tile(tf.reduce_sum(mask,axis=1,keep_dims=True), [1,1,3]) # Bx1x3
-    print mask
+    print (mask)
     point_cloud_xyz = tf.slice(point_cloud, [0,0,0], [-1,-1,3]) # BxNx3
 
     # ---- Subtract points mean ----
     mask_xyz_mean = tf.reduce_sum(tf.tile(mask, [1,1,3])*point_cloud_xyz, axis=1, keep_dims=True) # Bx1x3
     mask_xyz_mean = mask_xyz_mean/tf.maximum(mask_count,1) # Bx1x3
     point_cloud_xyz_stage1 = point_cloud_xyz - tf.tile(mask_xyz_mean, [1,num_point,1])
-    print 'Point cloud xyz stage1: ', point_cloud_xyz_stage1
+    print ('Point cloud xyz stage1: ', point_cloud_xyz_stage1)
 
     # ---- Regress 1st stage center ----
     net = tf.expand_dims(point_cloud_xyz_stage1, 2)
-    print net
+    print (net)
     net = tf_util.conv2d(net, 128, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=True, is_training=is_training,
@@ -126,10 +126,10 @@ def get_model(point_cloud, one_hot_vec, is_training, bn_decay=None):
                          scope='conv-reg3-stage1', bn_decay=bn_decay)
     mask_expand = tf.tile(tf.expand_dims(mask,-1), [1,1,1,256])
     masked_net = net*mask_expand
-    print masked_net
+    print(masked_net)
     net = tf_util.max_pool2d(masked_net, [num_point,1], padding='VALID', scope='maxpool-stage1')
     net = tf.squeeze(net, axis=[1,2])
-    print net
+    print(net)
     net = tf.concat([net, one_hot_vec], axis=1)
     net = tf_util.fully_connected(net, 256, scope='fc1-stage1', bn=True, is_training=is_training, bn_decay=bn_decay)
     net = tf_util.fully_connected(net, 128, scope='fc2-stage1', bn=True, is_training=is_training, bn_decay=bn_decay)
@@ -139,10 +139,10 @@ def get_model(point_cloud, one_hot_vec, is_training, bn_decay=None):
 
     # ---- Subtract stage1 center ----
     point_cloud_xyz_submean = point_cloud_xyz - tf.expand_dims(stage1_center, 1)
-    print 'Point cloud xyz submean: ', point_cloud_xyz_submean
+    print('Point cloud xyz submean: ', point_cloud_xyz_submean)
 
     net = tf.expand_dims(point_cloud_xyz_submean, 2)
-    print net
+    print(net)
     net = tf_util.conv2d(net, 128, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=True, is_training=is_training,
@@ -161,10 +161,10 @@ def get_model(point_cloud, one_hot_vec, is_training, bn_decay=None):
                          scope='conv-reg4', bn_decay=bn_decay)
     mask_expand = tf.tile(tf.expand_dims(mask,-1), [1,1,1,512])
     masked_net = net*mask_expand
-    print masked_net
+    print(masked_net)
     net = tf_util.max_pool2d(masked_net, [num_point,1], padding='VALID', scope='maxpool2')
     net = tf.squeeze(net, axis=[1,2])
-    print net
+    print(net)
     net = tf.concat([net, one_hot_vec], axis=1)
     net = tf_util.fully_connected(net, 512, scope='fc1', bn=True, is_training=is_training, bn_decay=bn_decay)
     net = tf_util.fully_connected(net, 256, scope='fc2', bn=True, is_training=is_training, bn_decay=bn_decay)
@@ -172,7 +172,7 @@ def get_model(point_cloud, one_hot_vec, is_training, bn_decay=None):
     # First 3 are cx,cy,cz, next NUM_HEADING_BIN*2 are for heading
     # next NUM_SIZE_CLUSTER*4 are for dimension
     output = tf_util.fully_connected(net, 3+NUM_HEADING_BIN*2+NUM_SIZE_CLUSTER*4, activation_fn=None, scope='fc3')
-    print output
+    print(output)
 
     center = tf.slice(output, [0,0], [-1,3])
     center = center + stage1_center # Bx3
@@ -225,10 +225,10 @@ def get_loss(logits, \
     tf.summary.scalar('heading class loss', heading_class_loss)
 
     tmp = tf.one_hot(heading_class_label, depth=NUM_HEADING_BIN, on_value=1, off_value=0, axis=-1) # BxNUM_HEADING_BIN
-    print tmp
+    print(tmp)
     heading_residual_normalized_label = heading_residual_label / (np.pi/NUM_HEADING_BIN)
     heading_residual_normalized_loss = huber_loss(tf.reduce_sum(end_points['heading_residuals_normalized']*tf.to_float(tmp), axis=1) - heading_residual_normalized_label, delta=1.0)
-    print heading_residual_normalized_loss
+    print(heading_residual_normalized_loss)
     tf.summary.scalar('heading residual normalized loss', heading_residual_normalized_loss)
 
     size_class_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=end_points['size_scores'], labels=size_class_label))
@@ -244,7 +244,7 @@ def get_loss(logits, \
  
     size_normalized_dist = tf.norm(size_residual_label_normalized - predicted_size_residual_normalized, axis=-1)
     size_residual_normalized_loss = huber_loss(size_normalized_dist, delta=1.0)
-    print size_residual_normalized_loss
+    print(size_residual_normalized_loss)
     tf.summary.scalar('size residual normalized loss', size_residual_normalized_loss)
 
     # Compute IOU 3D
@@ -270,7 +270,7 @@ def get_loss(logits, \
     corners_3d_gt_flip = get_box3d_corners_helper(center_label, heading_label+np.pi, size_label) # (B,8,3)
 
     corners_dist = tf.minimum(tf.norm(corners_3d_pred - corners_3d_gt, axis=-1), tf.norm(corners_3d_pred - corners_3d_gt_flip, axis=-1))
-    print "Corners dist: ", corners_dist
+    print("Corners dist: ", corners_dist)
     corners_loss = huber_loss(corners_dist, delta=1.0) 
     tf.summary.scalar('corners loss', corners_loss)
 
@@ -281,6 +281,6 @@ if __name__=='__main__':
     with tf.Graph().as_default():
         inputs = tf.zeros((32,1024,6))
         outputs = get_model(inputs, tf.ones((32,3)), tf.constant(True))
-        print outputs
+        print(outputs)
         loss = get_loss(outputs[0], tf.zeros((32,1024),dtype=tf.int32), tf.zeros((32,3)), tf.zeros((32,),dtype=tf.int32), tf.zeros((32,)), tf.zeros((32,),dtype=tf.int32), tf.zeros((32,3)), outputs[1])
-        print loss
+        print(loss)

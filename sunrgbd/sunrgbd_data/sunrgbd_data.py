@@ -50,7 +50,7 @@ class sunrgbd_object(object):
         img_filename = os.path.join(self.image_dir, '%06d.jpg'%(idx))
         return utils.load_image(img_filename)
 
-    def get_depth(self, idx): 
+    def get_depth(self, idx):
         depth_filename = os.path.join(self.depth_dir, '%06d.txt'%(idx))
         return utils.load_depth_points(depth_filename)
 
@@ -151,7 +151,7 @@ def dataset_viz(show_frustum=False):
 
 
 def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=False, augmentX=1, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','bathtub']):
-    dataset = sunrgbd_object('/home/rqi/Data/mysunrgbd', split)
+    dataset = sunrgbd_object('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd', split)
     data_idx_list = [int(line.rstrip()) for line in open(idx_filename)]
 
     id_list = [] # int number
@@ -167,6 +167,8 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
     pos_cnt = 0
     all_cnt = 0
     for data_idx in data_idx_list:
+        if data_idx > 500:
+            continue
         print('------------- ', data_idx)
         calib = dataset.get_calibration(data_idx)
         objects = dataset.get_label_objects(data_idx)
@@ -177,7 +179,7 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
         if viz:
             mlab.points3d(pc_upright_camera[:,0], pc_upright_camera[:,1], pc_upright_camera[:,2], pc_upright_camera[:,1], mode='point')
             mlab.orientation_axes()
-            raw_input()
+            # raw_input()
         img = dataset.get_image(data_idx)
         img_height, img_width, img_channel = img.shape
         pc_image_coord,_ = calib.project_upright_depth_to_image(pc_upright_depth)
@@ -190,7 +192,7 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
             # 2D BOX: Get pts rect backprojected 
             box2d = obj.box2d
             for _ in range(augmentX):
-                try:
+                #try:
                     # Augment data by box2d perturbation
                     if perturb_box2d:
                         xmin,ymin,xmax,ymax = random_shift_box2d(box2d)
@@ -243,7 +245,6 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
                     heading_list.append(obj.heading_angle)
                     box3d_size_list.append(box3d_size)
                     frustum_angle_list.append(frustum_angle)
-    
                     # collect statistics
                     pos_cnt += np.sum(label)
                     all_cnt += pc_in_box_fov.shape[0]
@@ -261,9 +262,10 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
                         mlab.points3d(0, 0, 0, color=(1,1,1), mode='sphere', scale_factor=0.2)
                         draw_gt_boxes3d([box3d_pts_3d], fig=fig)
                         mlab.orientation_axes()
-                        raw_input()
-                except:
-                    pass
+                        # raw_input()
+                        input()
+                # except:
+                #     pass
 
     print('Average pos ratio: ', pos_cnt/float(all_cnt))
     print('Average npoints: ', float(all_cnt)/len(id_list))
@@ -272,7 +274,7 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
 
  
 def get_box3d_dim_statistics(idx_filename, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','bathtub']):
-    dataset = sunrgbd_object('/home/rqi/Data/mysunrgbd')
+    dataset = sunrgbd_object('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd')
     dimension_list = []
     type_list = []
     ry_list = []
@@ -289,7 +291,7 @@ def get_box3d_dim_statistics(idx_filename, type_whitelist=['bed','table','sofa',
             type_list.append(obj.classname) 
             ry_list.append(heading_angle)
 
-    import cPickle as pickle
+    import pickle
     with open('box3d_dimensions.pickle','wb') as fp:
         pickle.dump(type_list, fp)
         pickle.dump(dimension_list, fp)
@@ -329,7 +331,7 @@ def extract_roi_seg_from_rgb_detection(det_folder, split, output_filename, viz, 
         Usage: extract_roi_seg_from_rgb_detection("val_result_folder", "training", "roi_seg_val_rgb_detector_0908.pickle")
 
     '''
-    dataset = sunrgbd_object('/home/rqi/Data/mysunrgbd', split)
+    dataset = sunrgbd_object('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd', split)
     det_id_list, det_type_list, det_box2d_list, det_prob_list = read_det_folder(det_folder)
     cache_id = -1
     cache = None
@@ -406,7 +408,10 @@ def extract_roi_seg_from_rgb_detection(det_folder, split, output_filename, viz, 
 
 if __name__=='__main__':
     #dataset_viz()
-    #get_box3d_dim_statistics('/home/rqi/Data/mysunrgbd/training/train_data_idx.txt')
-    extract_roi_seg('/home/rqi/Data/mysunrgbd/training/val_data_idx.txt', 'training', output_filename='val_1002.zip.pickle', viz=False, augmentX=1) 
-    extract_roi_seg('/home/rqi/Data/mysunrgbd/training/train_data_idx.txt', 'training', output_filename='train_1002_aug5x.zip.pickle', viz=False, augmentX=5) 
-    #extract_roi_seg_from_rgb_detection('FPN_384x384', 'training', 'fcn_det_val.zip.pickle', valid_id_list=[int(line.rstrip()) for line in open('/home/rqi/Data/mysunrgbd/training/val_data_idx.txt')], viz=True)
+    #get_box3d_dim_statistics('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/train_data_idx.txt')
+
+
+    extract_roi_seg('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/val_data_idx.txt', 'training', output_filename='val_0419.zip.pickle', viz=False, augmentX=1)
+    extract_roi_seg('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/train_data_idx.txt', 'training', output_filename='train_0419_aug5x.zip.pickle', viz=False, augmentX=5)
+
+    # extract_roi_seg_from_rgb_detection('FPN_384x384', 'training', 'fcn_det_val.zip.pickle', valid_id_list=[int(line.rstrip()) for line in open('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/val_data_idx.txt')], viz=True)

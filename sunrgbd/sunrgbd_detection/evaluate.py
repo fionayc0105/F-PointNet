@@ -1,4 +1,4 @@
-import cPickle as pickle
+import pickle
 import numpy as np
 import argparse
 from PIL import Image
@@ -23,9 +23,9 @@ parser.add_argument('--from_rgb_detection', action='store_true', help='test from
 FLAGS = parser.parse_args()
 
 
-IMG_DIR = '/home/rqi/Data/mysunrgbd/training/image'
+IMG_DIR = '/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/image'
 TEST_DATASET = roi_seg_box3d_dataset.ROISegBoxDataset(npoints=2048, split='val', rotate_to_center=True, overwritten_data_path=FLAGS.data_path, from_rgb_detection=FLAGS.from_rgb_detection)
-dataset = sunrgbd_object('/home/rqi/Data/mysunrgbd', 'training')
+dataset = sunrgbd_object('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd', 'training')
 
 ps_list, segp_list, center_list, heading_cls_list, heading_res_list, size_cls_list, size_res_list, rot_angle_list, score_list = load_zipped_pickle(FLAGS.result_path)
 
@@ -34,11 +34,11 @@ pred_all = {}
 gt_all = {}
 ovthresh = 0.25
 
-print len(segp_list), len(TEST_DATASET)
-raw_input()
+print(len(segp_list), len(TEST_DATASET))
+# raw_input()
 
 # Get GT boxes
-print 'Construct GT boxes...'
+print('Construct GT boxes...')
 classname_list = ['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','bathtub']
 """
 for i in range(len(TEST_DATASET)):
@@ -69,10 +69,10 @@ for classname in classname_list:
             gt_all[img_id].append((classname, box))
 #print gt_all[1]
 #print gt_all2[1]
-raw_input()
+# raw_input()
 
 # Get PRED boxes
-print 'Construct PRED boxes...'
+print('Construct PRED boxes...')
 for i in range(len(TEST_DATASET)):
     img_id = TEST_DATASET.id_list[i] 
     classname = TEST_DATASET.type_list[i]
@@ -94,16 +94,16 @@ for i in range(len(TEST_DATASET)):
     if img_id not in pred_all:
         pred_all[img_id] = []
     pred_all[img_id].append((classname, corners_3d_pred, score_list[i]))
-print pred_all[1]
-raw_input()
+print(pred_all[1])
+# raw_input()
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 mpl.rc('axes', linewidth=2)
-print 'Computing AP...'
+print('Computing AP...')
 rec, prec, ap = eval_det(pred_all, gt_all, ovthresh)
 for classname in ap.keys():
-    print '%015s: %f' % (classname, ap[classname])
+    print('%015s: %f' % (classname, ap[classname]))
     plt.plot(rec[classname], prec[classname], lw=3)
     fig = plt.gcf()
     fig.subplots_adjust(bottom=0.25)
@@ -113,5 +113,5 @@ for classname in ap.keys():
     plt.ylabel('Precision', fontsize=24)
     plt.title(classname, fontsize=24)
     plt.show()
-    raw_input()
-print 'mean AP: ', np.mean([ap[classname] for classname in ap])
+    # raw_input()
+print('mean AP: ', np.mean([ap[classname] for classname in ap]))

@@ -66,8 +66,8 @@ HOSTNAME = socket.gethostname()
 
 NUM_CLASSES = 2
 
-TRAIN_DATASET = roi_seg_box3d_dataset.ROISegBoxDataset(npoints=NUM_POINT, split='train', rotate_to_center=True, random_flip=True, random_shift=True, overwritten_data_path='train_1002_aug5x.zip.pickle', one_hot=True)
-TEST_DATASET = roi_seg_box3d_dataset.ROISegBoxDataset(npoints=NUM_POINT, split='val', rotate_to_center=True, overwritten_data_path='val_1002.zip.pickle', one_hot=True)
+TRAIN_DATASET = roi_seg_box3d_dataset.ROISegBoxDataset(npoints=NUM_POINT, split='train', rotate_to_center=True, random_flip=True, random_shift=True, overwritten_data_path='train_0419_aug5x.zip.pickle', one_hot=True)
+TEST_DATASET = roi_seg_box3d_dataset.ROISegBoxDataset(npoints=NUM_POINT, split='val', rotate_to_center=True, overwritten_data_path='val_0419.zip.pickle', one_hot=True)
 print(len(TRAIN_DATASET))
 print(len(TEST_DATASET))
 
@@ -191,8 +191,8 @@ def train_one_epoch(sess, ops, train_writer):
     # Shuffle train samples
     train_idxs = np.arange(0, len(TRAIN_DATASET))
     np.random.shuffle(train_idxs)
-    num_batches = len(TRAIN_DATASET)/BATCH_SIZE
-    
+    num_batches = int(len(TRAIN_DATASET)/BATCH_SIZE)
+
     log_string(str(datetime.now()))
 
     total_correct = 0
@@ -252,7 +252,7 @@ def eval_one_epoch(sess, ops, test_writer):
     global EPOCH_CNT
     is_training = False
     test_idxs = np.arange(0, len(TEST_DATASET))
-    num_batches = len(TEST_DATASET)/BATCH_SIZE
+    num_batches = int(len(TEST_DATASET)/BATCH_SIZE)
 
     total_correct = 0
     total_seen = 0

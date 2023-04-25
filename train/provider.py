@@ -5,7 +5,7 @@ Date: September 2017
 '''
 from __future__ import print_function
 
-import cPickle as pickle
+import pickle
 import sys
 import os
 import numpy as np
@@ -127,25 +127,26 @@ class FrustumDataset(object):
         self.from_rgb_detection = from_rgb_detection
         if from_rgb_detection:
             with open(overwritten_data_path,'rb') as fp:
-                self.id_list = pickle.load(fp)
-                self.box2d_list = pickle.load(fp)
-                self.input_list = pickle.load(fp)
-                self.type_list = pickle.load(fp)
+                self.id_list = pickle.load(fp, encoding='latin1')
+                self.box2d_list = pickle.load(fp, encoding='latin1')
+                self.input_list = pickle.load(fp, encoding='latin1')
+                self.type_list = pickle.load(fp, encoding='latin1')
                 # frustum_angle is clockwise angle from positive x-axis
-                self.frustum_angle_list = pickle.load(fp) 
-                self.prob_list = pickle.load(fp)
+                self.frustum_angle_list = pickle.load(fp, encoding='latin1')
+                self.prob_list = pickle.load(fp, encoding='latin1')
         else:
             with open(overwritten_data_path,'rb') as fp:
-                self.id_list = pickle.load(fp)
-                self.box2d_list = pickle.load(fp)
-                self.box3d_list = pickle.load(fp)
-                self.input_list = pickle.load(fp)
-                self.label_list = pickle.load(fp)
-                self.type_list = pickle.load(fp)
-                self.heading_list = pickle.load(fp)
-                self.size_list = pickle.load(fp)
+                print("Provider path=" + overwritten_data_path)
+                self.id_list = pickle.load(fp, encoding='latin1')
+                self.box2d_list = pickle.load(fp, encoding='latin1')
+                self.box3d_list = pickle.load(fp, encoding='latin1')
+                self.input_list = pickle.load(fp, encoding='latin1')
+                self.label_list = pickle.load(fp, encoding='latin1')
+                self.type_list = pickle.load(fp, encoding='latin1')
+                self.heading_list = pickle.load(fp, encoding='latin1')
+                self.size_list = pickle.load(fp, encoding='latin1')
                 # frustum_angle is clockwise angle from positive x-axis
-                self.frustum_angle_list = pickle.load(fp) 
+                self.frustum_angle_list = pickle.load(fp, encoding='latin1')
 
     def __len__(self):
             return len(self.input_list)

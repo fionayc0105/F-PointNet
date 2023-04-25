@@ -1,5 +1,5 @@
 """ Compare MATLAB and Python eval code on AP computation """
-import cPickle as pickle
+import pickle
 import numpy as np
 import argparse
 from PIL import Image
@@ -16,8 +16,9 @@ import roi_seg_box3d_dataset
 from roi_seg_box3d_dataset import rotate_pc_along_y, NUM_HEADING_BIN
 from eval_det import eval_det_cls
 
-root_dir = '/home/rqi/Data/detection'
-gt_boxes_dir = '/home/rqi/Projects/kitti-challenge/sunrgbd_detection/gt_boxes'
+root_dir = '/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/detection'
+
+gt_boxes_dir = '/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_detection/gt_boxes'
 
 def flip_axis_to_camera(pc):
     ''' Flip X-right,Y-forward,Z-up to X-right,Y-down,Z-forward
@@ -59,8 +60,8 @@ def get_gt_cls(classname):
     gt = {}
     gt_boxes = np.loadtxt(os.path.join(gt_boxes_dir, '%s_gt_boxes.dat'%(classname)))
     gt_imgids = np.loadtxt(os.path.join(gt_boxes_dir, '%s_gt_imgids.txt'%(classname)))
-    print gt_boxes.shape
-    print gt_imgids.shape
+    print(gt_boxes.shape)
+    print(gt_imgids.shape)
     for i in range(len(gt_imgids)):
         imgid = gt_imgids[i]
         bbox = gt_boxes[i]
@@ -81,7 +82,7 @@ if __name__=='__main__':
     pred = {}
     ovthresh = 0.25
     
-    print pred_boxes.shape
+    print(pred_boxes.shape)
      
     for i in range(0,10000):
         imgid = pred_imgids[i]
@@ -105,9 +106,9 @@ if __name__=='__main__':
     from sunrgbd_data import sunrgbd_object
     from utils import rotz, compute_box_3d, load_zipped_pickle
     
-    IMG_DIR = '/home/rqi/Data/mysunrgbd/training/image'
+    IMG_DIR = '/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/image'
     TEST_DATASET = roi_seg_box3d_dataset.ROISegBoxDataset(npoints=2048, split='val', rotate_to_center=True, overwritten_data_path='val_1002.zip.pickle', from_rgb_detection=False)
-    dataset = sunrgbd_object('/home/rqi/Data/mysunrgbd', 'training')
+    dataset = sunrgbd_object('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd', 'training')
     
     # For detection evaluation
     gt = {}
@@ -135,8 +136,8 @@ if __name__=='__main__':
     
     import matplotlib.pyplot as plt
     rec, prec, ap = eval_det_cls(pred, gt, ovthresh)
-    print prec[0:100]
-    print rec[0:100]
+    print(prec[0:100])
+    print(rec[0:100])
     
     plt.plot(rec, prec, lw=2)
     fig = plt.gcf()
@@ -147,4 +148,4 @@ if __name__=='__main__':
     plt.ylabel('Precision')
     plt.show()
     
-    print ap
+    print(ap)

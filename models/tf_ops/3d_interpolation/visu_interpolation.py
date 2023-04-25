@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import sys
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append('/home/rqi/Projects/toolkits/visualization')
+sys.path.append('/home/fiona/Projects/toolkits/visualization')
 from show3d_balls import showpoints
 import numpy as np
 from tf_interpolate import three_nn, three_interpolate

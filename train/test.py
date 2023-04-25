@@ -13,7 +13,9 @@ import argparse
 import importlib
 import numpy as np
 import tensorflow as tf
-import cPickle as pickle
+#import cPickle as pickle
+import pickle
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(BASE_DIR)
@@ -100,7 +102,7 @@ def softmax(x):
 def inference(sess, ops, pc, one_hot_vec, batch_size):
     ''' Run inference for frustum pointnets in batch mode '''
     assert pc.shape[0]%batch_size == 0
-    num_batches = pc.shape[0]/batch_size
+    num_batches = pc.shape[0]//batch_size
     logits = np.zeros((pc.shape[0], pc.shape[1], NUM_CLASSES))
     centers = np.zeros((pc.shape[0], 3))
     heading_logits = np.zeros((pc.shape[0], NUM_HEADING_BIN))
@@ -228,7 +230,7 @@ def test_from_rgb_detection(output_filename, result_dir=None):
         batch_one_hot_to_feed[0:cur_batch_size,:] = batch_one_hot_vec
 
         # Run one batch inference
-	batch_output, batch_center_pred, \
+        batch_output, batch_center_pred, \
         batch_hclass_pred, batch_hres_pred, \
         batch_sclass_pred, batch_sres_pred, batch_scores = \
             inference(sess, ops, batch_data_to_feed,
@@ -307,7 +309,7 @@ def test(output_filename, result_dir=None):
             get_batch(TEST_DATASET, test_idxs, start_idx, end_idx,
                 NUM_POINT, NUM_CHANNEL)
 
-	batch_output, batch_center_pred, \
+        batch_output, batch_center_pred, \
         batch_hclass_pred, batch_hres_pred, \
         batch_sclass_pred, batch_sres_pred, batch_scores = \
             inference(sess, ops, batch_data,
