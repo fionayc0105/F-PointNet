@@ -2,6 +2,7 @@ import os
 import sys
 from sklearn import model_selection
 from sunrgbd_data import sunrgbd_object
+import numpy as np
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SUNRGBD_ROOT = os.path.join(BASE_DIR, 'matlab/SUNRGBDtoolbox/mysunrgbd')
@@ -43,8 +44,15 @@ def categorize_data(idx_list, classname):
                 break
     return cate_list
 
+def resample_and_split_data(idx_list, count, ratio_train, ratio_valid, ratio_test):
+    np.random.shuffle(idx_list)
+    idx_resample = idx_list[0:count]
+    split_data(idx_resample, ratio_train, ratio_valid, ratio_test)
+    return idx_resample
 
 if __name__=='__main__':
     total_list = list(range(1, 1+10335))
     # 分離出單一類別的數據進行訓練
     cate_list = categorize_data(total_list, 'chair')
+    # 對數據進行採樣, 保留部份數據
+    resample_list = resample_and_split_data(cate_list, 600, 0.8, 0.19, 0.01)
