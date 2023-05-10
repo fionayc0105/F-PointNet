@@ -21,6 +21,7 @@ import cv2
 from PIL import Image
 
 data_dir = BASE_DIR
+SUNRGBD_DIR = os.path.join(BASE_DIR, 'matlab/SUNRGBDtoolbox/mysunrgbd/training')
 
 class sunrgbd_object(object):
     ''' Load and parse object data '''
@@ -167,8 +168,6 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
     pos_cnt = 0
     all_cnt = 0
     for data_idx in data_idx_list:
-        if data_idx > 500:
-            continue
         print('------------- ', data_idx)
         calib = dataset.get_calibration(data_idx)
         objects = dataset.get_label_objects(data_idx)
@@ -183,7 +182,6 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
         img = dataset.get_image(data_idx)
         img_height, img_width, img_channel = img.shape
         pc_image_coord,_ = calib.project_upright_depth_to_image(pc_upright_depth)
-        #print('PC image coord: ', pc_image_coord)
 
         for obj_idx in range(len(objects)):
             obj = objects[obj_idx]
@@ -192,11 +190,11 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
             # 2D BOX: Get pts rect backprojected 
             box2d = obj.box2d
             for _ in range(augmentX):
-                #try:
+                try:
                     # Augment data by box2d perturbation
                     if perturb_box2d:
                         xmin,ymin,xmax,ymax = random_shift_box2d(box2d)
-                        print(xmin,ymin,xmax,ymax)
+                        # print(xmin,ymin,xmax,ymax)
                     else:
                         xmin,ymin,xmax,ymax = box2d
                     box_fov_inds = (pc_image_coord[:,0]<xmax) & (pc_image_coord[:,0]>=xmin) & (pc_image_coord[:,1]<ymax) & (pc_image_coord[:,1]>=ymin)
@@ -207,25 +205,24 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
                     uvdepth[0,0:2] = box2d_center
                     uvdepth[0,2] = 20 # some random depth
                     box2d_center_upright_camera = calib.project_image_to_upright_camerea(uvdepth)
-                    print('UVdepth, center in upright camera: ', uvdepth, box2d_center_upright_camera)
+                    # print('UVdepth, center in upright camera: ', uvdepth, box2d_center_upright_camera)
                     frustum_angle = -1 * np.arctan2(box2d_center_upright_camera[0,2], box2d_center_upright_camera[0,0]) # angle as to positive x-axis as in the Zoox paper
-                    print('Frustum angle: ', frustum_angle)
+                    # print('Frustum angle: ', frustum_angle)
                     # 3D BOX: Get pts velo in 3d box
                     box3d_pts_2d, box3d_pts_3d = utils.compute_box_3d(obj, calib) 
                     box3d_pts_3d = calib.project_upright_depth_to_upright_camera(box3d_pts_3d)
                     _,inds = extract_pc_in_box3d(pc_in_box_fov, box3d_pts_3d)
-                    print(len(inds))
+                    # print(len(inds))
                     label = np.zeros((pc_in_box_fov.shape[0]))
                     label[inds] = 1
                     # Get 3D BOX heading
-                    print('Orientation: ', obj.orientation)
-                    print('Heading angle: ', obj.heading_angle)
+                    # print('Orientation: ', obj.orientation)
+                    # print('Heading angle: ', obj.heading_angle)
                     # Get 3D BOX size
                     box3d_size = np.array([2*obj.l,2*obj.w,2*obj.h])
-                    print('Box3d size: ', box3d_size)
-                    print('Type: ', obj.classname)
-                    print('Num of point: ', pc_in_box_fov.shape[0])
-                    
+                    # print('Box3d size: ', box3d_size)
+                    # print('Type: ', obj.classname)
+                    # print('Num of point: ', pc_in_box_fov.shape[0])
                     # Subsample points..
                     num_point = pc_in_box_fov.shape[0]
                     if num_point > 2048:
@@ -263,9 +260,9 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
                         draw_gt_boxes3d([box3d_pts_3d], fig=fig)
                         mlab.orientation_axes()
                         # raw_input()
-                        input()
-                # except:
-                #     pass
+                        # input()
+                except:
+                    pass
 
     print('Average pos ratio: ', pos_cnt/float(all_cnt))
     print('Average npoints: ', float(all_cnt)/len(id_list))
@@ -410,8 +407,9 @@ if __name__=='__main__':
     #dataset_viz()
     #get_box3d_dim_statistics('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/train_data_idx.txt')
 
-
-    extract_roi_seg('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/val_data_idx.txt', 'training', output_filename='val_0419.zip.pickle', viz=False, augmentX=1)
-    extract_roi_seg('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/train_data_idx.txt', 'training', output_filename='train_0419_aug5x.zip.pickle', viz=False, augmentX=5)
-
+    filename_train = os.path.join(SUNRGBD_DIR, "train_data_idx.txt")
+    filename_valid = os.path.join(SUNRGBD_DIR, "val_data_idx.txt")
+    extract_roi_seg(filename_train, 'training', output_filename='train_0419_aug5x.zip.pickle', viz=False, augmentX=1)
+    # extract_roi_seg(filename_train, 'training', output_filename='train_0419_aug5x.zip.pickle', viz=False, perturb_box2d=True, augmentX=5)
+    extract_roi_seg(filename_valid, 'training', output_filename='val_0419.zip.pickle', viz=False, augmentX=1)
     # extract_roi_seg_from_rgb_detection('FPN_384x384', 'training', 'fcn_det_val.zip.pickle', valid_id_list=[int(line.rstrip()) for line in open('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/val_data_idx.txt')], viz=True)
