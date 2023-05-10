@@ -32,36 +32,19 @@ def split_data(idx_list, ratio_train, ratio_valid, ratio_test):
 
 # 取得所有包含某類別的數據label以及data_idx
 def categorize_data(idx_list, classname):
-    idx_name = os.path.join(SUNRGBD_DIR, "data_idx_%s.txt" % (classname))
-    idx_fp = open(idx_name, "a+")
+    cate_list = []
     for i in range(len(idx_list)):
         data_idx = idx_list[i]
         objects = SUNRGBD_DARASET.get_label_objects(data_idx)
-        label_name = os.path.join(SUNRGBD_DIR, "label_dimension/%06d.txt" % (data_idx))
-        relabel_dir = os.path.join(SUNRGBD_DIR, "label_dimension_%s" % (classname))
-        if not os.path.exists(relabel_dir):
-            os.makedirs(relabel_dir)
-        relabel_name = os.path.join(relabel_dir, "%06d.txt" % (data_idx))
-        lines = [line.rstrip() for line in open(label_name)]
-        is_head = True
         for obj_idx in range(len(objects)):
             obj = objects[obj_idx]
             if obj.classname == classname:
-                fp = open(relabel_name, "a+")
-                if is_head:
-                    idx_fp.write("%06d\n" % (data_idx))
-                    is_head = False
-                else:
-                    fp.write('\n')
-                fp.write(lines[obj_idx])
-                fp.close()
-    idx_fp.close()
+                cate_list.append(data_idx)
+                break
+    return cate_list
 
 
 if __name__=='__main__':
-    idx_list = list(range(1, 1+10335))
-    # split_data(idx_list, 0.8, 0.19, 0.01)
-
+    total_list = list(range(1, 1+10335))
     # 分離出單一類別的數據進行訓練
-    categorize_data(idx_list, 'chair')
-
+    cate_list = categorize_data(total_list, 'chair')
