@@ -319,8 +319,15 @@ def eval_one_epoch(sess, ops, test_writer):
     EPOCH_CNT += 1
     return loss_sum/float(num_batches)
 
+import time
 
 if __name__ == "__main__":
+    start = time.time()
+    log_string("start time:" + str(start))
     log_string('pid: %s'%(str(os.getpid())))
     train()
+    end = time.time()
+    log_string("end time:" + str(end))
+    exec_time = end-start
+    log_string("exec time:" + str(exec_time) + " s")
     LOG_FOUT.close()
