@@ -184,7 +184,7 @@ def compare_with_anchor_boxes(center_label, heading_class_label, heading_residua
     return iou2ds, iou3ds, center_residuals, heading_residuals, size_residuals
 
 class ROISegBoxDataset(object):
-    def __init__(self, npoints, split, random_flip=False, random_shift=False, rotate_to_center=False, overwritten_data_path=None, from_rgb_detection=False, one_hot=False):
+    def __init__(self, npoints, split, random_flip=False, random_shift=False, rotate_to_center=False, overwritten_data_path=None, from_rgb_detection=False, one_hot=False, start_idx=-1, end_idx=-1):
         self.npoints = npoints
         self.random_flip = random_flip
         self.random_shift = random_shift
@@ -197,8 +197,11 @@ class ROISegBoxDataset(object):
         if from_rgb_detection:
             self.id_list, self.box2d_list, self.input_list, self.type_list, self.frustum_angle_list, self.prob_list = load_zipped_pickle(overwritten_data_path)
         else:
-            self.id_list,self.box2d_list,self.box3d_list,self.input_list,self.label_list,self.type_list,self.heading_list,self.size_list,self.frustum_angle_list=load_zipped_pickle(overwritten_data_path)
-
+            if start_idx == -1 and end_idx == -1:
+                self.id_list,self.box2d_list,self.box3d_list,self.input_list,self.label_list,self.type_list,self.heading_list,self.size_list,self.frustum_angle_list=load_zipped_pickle(overwritten_data_path)
+            else:
+                self.id_list, self.box2d_list, self.box3d_list, self.input_list, self.label_list, self.type_list, self.heading_list, self.size_list, self.frustum_angle_list = load_zipped_pickle(
+                    overwritten_data_path, start_idx, end_idx)
     def __len__(self):
             return len(self.input_list)
 

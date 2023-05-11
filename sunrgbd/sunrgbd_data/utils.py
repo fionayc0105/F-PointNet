@@ -172,10 +172,14 @@ def inverse_rigid_trans(Tr):
     return inv_Tr
 
 def read_sunrgbd_label(label_filename):
+    objects = []
     lines = [line.rstrip() for line in open(label_filename)]
     print(len(lines))
     if len(lines) > 0:
-        objects = [SUNObject3d(line) for line in lines]
+        for line in lines:
+            data = line.split(' ')
+            if len(data) == 17:
+                objects.append(SUNObject3d(line))
     else :
         objects = []
     return objects
@@ -301,11 +305,38 @@ def draw_projected_box3d(image, qs, color=(255,255,255), thickness=2):
 import pickle
 import gzip
 
+count = 0
 def save_zipped_pickle(obj, filename, protocol=-1):
-    with gzip.open(filename, 'wb') as f:
+    # with gzip.open(filename, 'wb') as f:
+    global count
+    with gzip.open(filename, 'a+') as f:
         pickle.dump(obj, f, protocol)
 
-def load_zipped_pickle(filename):
-    with gzip.open(filename, 'rb') as f:
-        loaded_object = pickle.load(f)
+
+TRAIN_DATASET_FILE = None
+
+def load_zipped_pickle(filename, start_idx=-1, end_idx=-1):
+    global TRAIN_DATASET_FILE
+    if start_idx == -1 and end_idx == -1:
+        with gzip.open(filename, 'rb') as f:
+            loaded_object = pickle.load(f)
+            return loaded_object
+    else:
+        loaded_object = []
+        if TRAIN_DATASET_FILE == None or TRAIN_DATASET_FILE.closed:
+            TRAIN_DATASET_FILE = gzip.open(filename, "rb")
+
+        objs = []
+        count = end_idx - start_idx
+        for i in range(count):
+            try:
+                obj = pickle.load(TRAIN_DATASET_FILE)
+                # print("Load ID=", obj[0], "TYPE=", obj[5], "2D:", obj[1])
+                objs.append(obj)
+            except EOFError:
+                TRAIN_DATASET_FILE.close()
+                break
+        for i in range(len(objs[0])):
+            input = np.array(objs)[:, i]
+            loaded_object.append(input)
         return loaded_object
