@@ -31,7 +31,7 @@ sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/traintestSUNRGBD/*
 *.pyc
 sunrgbd/sunrgbd_detection/viz_results
 sunrgbd/sunrgbd_detection/dataset_all
-
+sunrgbd/sunrgbd_detection/log*
 
 
 
