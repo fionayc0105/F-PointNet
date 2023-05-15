@@ -9,10 +9,11 @@ from utils import roty, load_zipped_pickle
 sys.path.append(os.path.join(BASE_DIR, '../../train'))
 from box_util import box3d_iou
 
-type2class={'bed':0, 'table':1, 'sofa':2, 'chair':3, 'toilet':4, 'desk':5, 'dresser':6, 'night_stand':7, 'bookshelf':8, 'bathtub':9}
+type2class={'bed':0, 'table':1, 'sofa':2, 'chair':3, 'toilet':4, 'desk':5, 'dresser':6, 'night_stand':7, 'bookshelf':8, 'box':9}
 class2type = {type2class[t]:t for t in type2class}
-type2onehotclass={'bed':0, 'table':1, 'sofa':2, 'chair':3, 'toilet':4, 'desk':5, 'dresser':6, 'night_stand':7, 'bookshelf':8, 'bathtub':9}
-type_mean_size = {'bathtub': np.array([0.765840,1.398258,0.472728]),
+type2onehotclass={'bed':0, 'table':1, 'sofa':2, 'chair':3, 'toilet':4, 'desk':5, 'dresser':6, 'night_stand':7, 'bookshelf':8, 'box':9}
+type_mean_size = {
+                  # 'bathtub': np.array([0.765840,1.398258,0.472728]),
                   'bed': np.array([2.114256,1.620300,0.927272]),
                   'bookshelf': np.array([0.404671,1.071108,1.688889]),
                   'chair': np.array([0.591958,0.552978,0.827272]),
@@ -21,7 +22,11 @@ type_mean_size = {'bathtub': np.array([0.765840,1.398258,0.472728]),
                   'night_stand': np.array([0.500618,0.632163,0.683424]),
                   'sofa': np.array([0.923508,1.867419,0.845495]),
                   'table': np.array([0.791118,1.279516,0.718182]),
-                  'toilet': np.array([0.699104,0.454178,0.756250])}
+                  'toilet': np.array([0.699104,0.454178,0.756250]),
+                  # 'mug': np.array([0.137363*2, 0.125435*2, 0.144140*2])} # l, w, h
+                  'box': np.array([0.3709801739130432, 0.3998647613526569, 0.34856975652173955])} # l, w, h
+
+
 NUM_HEADING_BIN = 12
 NUM_SIZE_CLUSTER = 10
 NUM_CLASS = 10
@@ -212,7 +217,7 @@ class ROISegBoxDataset(object):
         # compute one hot vector
         if self.one_hot:
             cls_type = self.type_list[index]
-            assert(cls_type in ['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','bathtub'])
+            # assert(cls_type in ['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','bathtub'])
             one_hot_vec = np.zeros((NUM_CLASS))
             one_hot_vec[type2onehotclass[cls_type]] = 1
 

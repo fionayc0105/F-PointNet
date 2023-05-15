@@ -46,6 +46,11 @@ def categorize_data(idx_list, classname):
 
 
 def relabel(idx_list, classname):
+    w = 0
+    l = 0
+    h = 0
+    count = 0
+
     for i in range(len(idx_list)):
         data_idx = idx_list[i]
         objects = SUNRGBD_DARASET.get_label_objects(data_idx)
@@ -58,9 +63,19 @@ def relabel(idx_list, classname):
         for obj_idx in range(len(objects)):
             obj = objects[obj_idx]
             if obj.classname == classname:
+                w = w + obj.w
+                h = h + obj.h
+                l = l + obj.l
+                count = count + 1
                 fp = open(relabel_name, "a+")
                 fp.write(lines[obj_idx]+'\n')
                 fp.close()
+
+    w_avg = w / count
+    h_avg = h / count
+    l_avg = l / count
+    print ("l=", l_avg*2, ", w:", w_avg*2, ",h=", h_avg*2)
+
 
 
 def resample_and_split_data(idx_list, count, ratio_train, ratio_valid, ratio_test):
@@ -71,10 +86,11 @@ def resample_and_split_data(idx_list, count, ratio_train, ratio_valid, ratio_tes
 
 
 if __name__=='__main__':
+    category = 'box'
     total_list = list(range(1, 1+10335))
     # 分離出單一類別的數據進行訓練
-    cate_list = categorize_data(total_list, 'chair')
+    cate_list = categorize_data(total_list, category)
     # 對數據進行採樣, 保留部份數據
     resample_list = resample_and_split_data(cate_list, 600, 0.8, 0.19, 0.01)
     # 建立新的label,只保留設定的classname
-    relabel(resample_list, 'chair')
+    relabel(resample_list, category)
