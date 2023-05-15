@@ -66,7 +66,7 @@ COLORS = { 'bed': (226, 126, 37),
            'dresser': (249, 148, 165),
            'night_stand': (61, 231, 98),
            'bookshelf': (64, 128, 0),
-           'bathtub': (64, 0, 64)
+           'box': (64, 0, 64)
            }
 
 
@@ -194,7 +194,7 @@ def get_frustum_angle(box2d, calib):
 
 
 def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet', 'desk', 'dresser', 'night_stand',
-                                          'bookshelf', 'bathtub']):
+                                          'bookshelf', 'box']):
     dataset = sunrgbd_object(SUNRGBD_ROOT, 'training')
     pc_list = []  # point cloud list,  channel number = 6, xyz,rgb in upright depth coord
     onehot_list = []  # angle of 2d box center from pos x-axis (clockwise)

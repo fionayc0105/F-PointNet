@@ -151,7 +151,7 @@ def dataset_viz(show_frustum=False):
                 raw_input()
 
 
-def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=False, augmentX=1, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','bathtub']):
+def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=False, augmentX=1, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','box']):
     dataset = sunrgbd_object('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd', split)
     data_idx_list = [int(line.rstrip()) for line in open(idx_filename)]
 
@@ -270,7 +270,7 @@ def extract_roi_seg(idx_filename, split, output_filename, viz, perturb_box2d=Fal
     utils.save_zipped_pickle([id_list,box2d_list,box3d_list,input_list,label_list,type_list,heading_list,box3d_size_list,frustum_angle_list],output_filename)
 
  
-def get_box3d_dim_statistics(idx_filename, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','bathtub']):
+def get_box3d_dim_statistics(idx_filename, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','box']):
     dataset = sunrgbd_object('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd')
     dimension_list = []
     type_list = []
@@ -314,7 +314,7 @@ def read_det_folder(det_folder):
     return id_list, type_list, box2d_list, prob_list
 
 
-def extract_roi_seg_from_rgb_detection(det_folder, split, output_filename, viz, valid_id_list=None, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','bathtub']):
+def extract_roi_seg_from_rgb_detection(det_folder, split, output_filename, viz, valid_id_list=None, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','box']):
     ''' Extract data pairs for RoI point set segmentation from RGB detector outputed 2D boxes.
         
         Input:
@@ -409,7 +409,7 @@ if __name__=='__main__':
 
     filename_train = os.path.join(SUNRGBD_DIR, "train_data_idx.txt")
     filename_valid = os.path.join(SUNRGBD_DIR, "val_data_idx.txt")
-    extract_roi_seg(filename_train, 'training', output_filename='train_0419_aug5x.zip.pickle', viz=False, augmentX=1)
-    # extract_roi_seg(filename_train, 'training', output_filename='train_0419_aug5x.zip.pickle', viz=False, perturb_box2d=True, augmentX=5)
-    extract_roi_seg(filename_valid, 'training', output_filename='val_0419.zip.pickle', viz=False, augmentX=1)
+    # extract_roi_seg(filename_train, 'training', output_filename='train_0419_aug5x.zip.pickle', viz=False, augmentX=1, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','box'])
+    extract_roi_seg(filename_train, 'training', output_filename='train_0419_aug5x.zip.pickle', viz=False, perturb_box2d=True, augmentX=5, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','box'])
+    extract_roi_seg(filename_valid, 'training', output_filename='val_0419.zip.pickle', viz=False, augmentX=1, type_whitelist=['bed','table','sofa','chair','toilet','desk','dresser','night_stand','bookshelf','box'])
     # extract_roi_seg_from_rgb_detection('FPN_384x384', 'training', 'fcn_det_val.zip.pickle', valid_id_list=[int(line.rstrip()) for line in open('/home/fiona/ws/PointNet/frustum-pointnets/src/sunrgbd/sunrgbd_data/matlab/SUNRGBDtoolbox/mysunrgbd/training/val_data_idx.txt')], viz=True)
