@@ -77,16 +77,18 @@ class SUNRGBD_Calibration(object):
         ''' Flip X-right,Y-forward,Z-up to X-right,Y-down,Z-forward
             Input and output are both (N,3) array
         '''
-        pc2 = np.copy(pc)
-        pc2[:,[0,1,2]] = pc2[:,[0,2,1]] # cam X,Y,Z = depth X,-Z,Y
-        pc2[:,1] *= -1
-        return pc2
+        # pc2 = np.copy(pc)
+        # pc2[:,[0,1,2]] = pc2[:,[0,2,1]] # cam X,Y,Z = depth X,-Z,Y
+        # pc2[:,1] *= -1
+        # return pc2
+        return pc
 
     def flip_axis_to_depth(self, pc):
-        pc2 = np.copy(pc)
-        pc2[:,[0,1,2]] = pc2[:,[0,2,1]] # depth X,Y,Z = cam X,Z,-Y
-        pc2[:,2] *= -1
-        return pc2
+        # pc2 = np.copy(pc)
+        # pc2[:,[0,1,2]] = pc2[:,[0,2,1]] # depth X,Y,Z = cam X,Z,-Y
+        # pc2[:,2] *= -1
+        # return pc2
+        return pc
 
     def project_upright_depth_to_camera(self, pc):
         ''' project point cloud from depth coord to camera coordinate

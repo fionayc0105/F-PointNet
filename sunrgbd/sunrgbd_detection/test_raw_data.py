@@ -3,6 +3,8 @@
 Author: Charles R. Qi
 Date: October 2017
 '''
+import sys
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 import argparse
 import importlib
@@ -66,7 +68,7 @@ COLORS = { 'bed': (226, 126, 37),
            'dresser': (249, 148, 165),
            'night_stand': (61, 231, 98),
            'bookshelf': (64, 128, 0),
-           'box': (64, 0, 64)
+           'box': (186, 216, 107)
            }
 
 
@@ -205,6 +207,7 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
     calib = dataset.get_calibration(data_idx)
     objects = dataset.get_label_objects(data_idx)
     pc_upright_depth = dataset.get_depth(data_idx)
+    pc_upright_depth = pc_upright_depth[:, 0:6]
     pc_upright_camera = np.zeros_like(pc_upright_depth)
     pc_upright_camera[:, 0:3] = calib.project_upright_depth_to_upright_camera(pc_upright_depth[:, 0:3])
     pc_upright_camera[:, 3:] = pc_upright_depth[:, 3:]
