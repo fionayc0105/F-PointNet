@@ -30,6 +30,8 @@ import sys
 import os
 from sunrgbd_data import sunrgbd_object
 
+from pc_viewer import display
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--num_point', type=int, default=2048, help='Point Number [default: 2048]')
@@ -215,6 +217,9 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
     img_height, img_width, img_channel = img.shape
     pc_image_coord, _ = calib.project_upright_depth_to_image(pc_upright_depth)
 
+    display(pc_upright_depth, "depth pc")
+    display(pc_upright_camera, "camera pc")
+
     for obj_idx in range(len(objects)):
         obj = objects[obj_idx]
         if obj.classname not in type_whitelist: continue
@@ -238,6 +243,7 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
 
         # step4: rotate to center
         pc_in_box_fov = get_center_view_point_set(pc_in_box_fov, frustum_angle)
+        display(pc_in_box_fov, "input pc")
 
         # step5: Resample
         choice = np.random.choice(pc_in_box_fov.shape[0], 2048, replace=True)
