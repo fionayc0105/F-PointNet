@@ -46,7 +46,7 @@ def find_roi_pc(pc, xmin, xmax, ymin, ymax):
 
 def display(source_data, window_name):
     pc = source_data[:, 0:3]
-    # 新建 vtkPoints 实例
+    # 新建vtkPoints實例
     points = vtk.vtkPoints()
     pointColors = vtk.vtkUnsignedCharArray()
     pointColors.SetNumberOfComponents(3)
@@ -68,7 +68,6 @@ def display(source_data, window_name):
     # 頂點相關的filter
     vertex = vtk.vtkVertexGlyphFilter()
     vertex.SetInputData(polydata)
-
     # mapper實例
     mapper = vtk.vtkPolyDataMapper()
     # 關聯filter輸出
@@ -84,23 +83,52 @@ def display(source_data, window_name):
     render.AddActor(actor)
     render.SetBackground(0, 0, 0)
     # Renderer Window
-    renderWindows = vtk.vtkRenderWindow()
-    renderWindows.AddRenderer(render)
-    renderWindows.SetSize(1200, 1200)
-    renderWindows.SetWindowName(window_name)
-
+    renderWnd = vtk.vtkRenderWindow()
+    renderWnd.AddRenderer(render)
+    renderWnd.SetSize(1200, 1200)
+    renderWnd.SetWindowName(window_name)
     # 加上3軸座標軸
     axis_actor = vtk.vtkAxesActor()
-    axis_actor.SetScale(10)
+    axis_actor.SetScale(5)
     render.AddActor(axis_actor)
+    # 畫出3d box
+    plot_3d_box(render)
+
     # System Event
     iwin_render = vtk.vtkRenderWindowInteractor()
-    iwin_render.SetRenderWindow(renderWindows)
+    iwin_render.SetRenderWindow(renderWnd)
     # Style
     iwin_render.SetInteractorStyle(vtk.vtkInteractorStyleMultiTouchCamera())
     iwin_render.Initialize()
-    #renderWindows.Render()
     iwin_render.Start()
+    return renderWnd
+
+
+# 標記出3d box的角點
+def plot_3d_box(render):
+    # 創建vtkPoints對象，存儲點的坐標
+    points = vtk.vtkPoints()
+    points.InsertNextPoint(1, 0, 0)  # 第一個點的坐標
+    points.InsertNextPoint(5, 5, 5)  # 第二個點的坐標
+    # 創建vtkCellArray對象，存儲線的索引
+    lines = vtk.vtkCellArray()
+    line = vtk.vtkLine()
+    line.GetPointIds().SetId(0, 0)  # 第一條線的第一個點的索引
+    line.GetPointIds().SetId(1, 1)  # 第一條線的第二個點的索引
+    lines.InsertNextCell(line)
+    # 創建vtkPolyData對象，將點和線結合起來
+    polyData = vtk.vtkPolyData()
+    polyData.SetPoints(points)
+    polyData.SetLines(lines)
+    # 創建vtkPolyDataMapper對象，將polyData映射到渲染器上
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputData(polyData)
+    # 創建vtkActor對象，將mapper添加到actor上
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetColor(1.0, 0, 1.0) # 設定線的顏色
+    render.AddActor(actor)
+    return render
 
 
 if __name__ == '__main__':
@@ -109,6 +137,7 @@ if __name__ == '__main__':
     # pc = flip_axis_to_camera(source_data)
     pc = flip_axis_x(source_data)
     display(pc, "pc color")
+
     # 找出落在某個影像範圍內的點雲
     x = 695
     y = 210
