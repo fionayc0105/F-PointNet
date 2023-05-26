@@ -205,6 +205,7 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
     rot_angle_list = []
     type_list = []
     box2d_list = []
+    pc_orig = []
 
     calib = dataset.get_calibration(data_idx)
     objects = dataset.get_label_objects(data_idx)
@@ -231,8 +232,7 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
                 pc_image_coord[:, 1] < ymax) & (pc_image_coord[:, 1] >= ymin)
         # step1: get point cloud
         pc_in_box_fov = pc_upright_camera[box_fov_inds, :]
-
-        display(pc_in_box_fov, "input pointcloud")
+        pc_orig.append(pc_in_box_fov)
 
         # step2: calculate the frustum angle and rotation angle
         frustum_angle = get_frustum_angle(box2d, calib)
@@ -261,7 +261,7 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
         type_list.append(obj.classname)
         box2d_list.append(box2d)
 
-    return pc_list, onehot_list, rot_angle_list, type_list, box2d_list,  calib
+    return pc_list, pc_orig, onehot_list, rot_angle_list, type_list, box2d_list, calib
 
 
 def test_data(viz=True):
@@ -286,38 +286,44 @@ def test_data(viz=True):
             img = cv2.imread(img_filename)
 
         # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        pc_list, onehot_list, rot_angle_list, type_list, box2d_list,  calib = get_batch(batch_idx)
-        for i in range(len(pc_list)):
-            batch_data = pc_list[i]
-            one_hot_vec = onehot_list[i]
-            rot_angle = rot_angle_list[i]
-            box2d = box2d_list[i]
-            batch_data_to_feed[0:cur_batch_size, ...] = batch_data
-            batch_one_hot_to_feed[0:cur_batch_size, :] = one_hot_vec
-            batch_output, batch_center_pred, batch_hclass_pred, batch_hres_pred, batch_sclass_pred, batch_sres_pred, batch_scores = inference(
-                sess, ops, batch_data_to_feed, batch_one_hot_to_feed, batch_size=batch_size)
-            # Option 1:
-            heading_angle = class2angle(batch_hclass_pred[0], batch_hres_pred[0], NUM_HEADING_BIN) + rot_angle
-            box_size = class2size(batch_sclass_pred[0], batch_sres_pred[0])  # l,w,h
-            center= rotate_pc_along_y(np.expand_dims(batch_center_pred[0], 0), -rot_angle).squeeze()
-            corners_3d = get_3d_box(box_size, heading_angle, center)
-            corners_upright_depth = calib.project_upright_camera_to_upright_depth(corners_3d)
-            box3d_pts_2d, _ = calib.project_upright_depth_to_image(corners_upright_depth)
+        """ pc_list: 經過down sample之後的點雲數據,用於作為模型推論的輸入資料
+            pc_orig: 還未經過down sample的原始點雲數據,可以比較清晰的看到物件點雲的原貌,用於推論結果的顯示
+        """
+       pc_list, pc_orig, onehot_list, rot_angle_list, type_list, box2d_list, calib = get_batch(batch_idx)
+       for i in range(len(pc_list)):
+           batch_data = pc_list[i]
+           one_hot_vec = onehot_list[i]
+           rot_angle = rot_angle_list[i]
+           box2d = box2d_list[i]
+           batch_data_to_feed[0:cur_batch_size, ...] = batch_data
+           batch_one_hot_to_feed[0:cur_batch_size, :] = one_hot_vec
+           batch_output, batch_center_pred, batch_hclass_pred, batch_hres_pred, batch_sclass_pred, batch_sres_pred, batch_scores = inference(
+               sess, ops, batch_data_to_feed, batch_one_hot_to_feed, batch_size=batch_size)
+           # Option 1:
+           heading_angle = class2angle(batch_hclass_pred[0], batch_hres_pred[0], NUM_HEADING_BIN) + rot_angle
+           box_size = class2size(batch_sclass_pred[0], batch_sres_pred[0])  # l,w,h
+           center= rotate_pc_along_y(np.expand_dims(batch_center_pred[0], 0), -rot_angle).squeeze()
+           corners_3d = get_3d_box(box_size, heading_angle, center)
+           corners_upright_depth = calib.project_upright_camera_to_upright_depth(corners_3d)
+           box3d_pts_2d, _ = calib.project_upright_depth_to_image(corners_upright_depth)
 
-            # # Option 2:
-            # heading_angle = class2angle(batch_hclass_pred[0], batch_hres_pred[0], NUM_HEADING_BIN)
-            # box_size = class2size(batch_sclass_pred[0], batch_sres_pred[0])  # l,w,h
-            # center = batch_center_pred[0]
-            # corners_3d = get_3d_box(box_size, heading_angle, center)
-            # corners_3d = rotate_pc_along_y(corners_3d, -rot_angle)
-            # center2 = [np.average(corners_3d[:, 0]), np.average(corners_3d[:, 1]), np.average(corners_3d[:,2])]
-            # corners_upright_depth = calib.project_upright_camera_to_upright_depth(corners_3d)
-            # box3d_pts_2d, _ = calib.project_upright_depth_to_image(corners_upright_depth)
+           # # Option 2:
+           # heading_angle = class2angle(batch_hclass_pred[0], batch_hres_pred[0], NUM_HEADING_BIN)
+           # box_size = class2size(batch_sclass_pred[0], batch_sres_pred[0])  # l,w,h
+           # center = batch_center_pred[0];
+           # corners_3d = get_3d_box(box_size, heading_angle, center)
+           # corners_3d = rotate_pc_along_y(corners_3d, -rot_angle)
+           # center2 = [np.average(corners_3d[:, 0]), np.average(corners_3d[:, 1]), np.average(corners_3d[:,2])]
+           # corners_upright_depth = calib.project_upright_camera_to_upright_depth(corners_3d)
+           # box3d_pts_2d, _ = calib.project_upright_depth_to_image(corners_upright_depth)
 
-            img = draw_projected_box3d(img, box3d_pts_2d, color=COLORS[type_list[i]])
-            img = draw_label(img, box3d_pts_2d[0, 0], box3d_pts_2d[0, 1], type_list[i], COLORS[type_list[i]])
-        cv2.imwrite(filename, img)
+           # 顯示推論的結果, 並且將結果用bounding box顯示
+           title_name = "Inference: %06d.jpg(%d)" % (batch_idx, i + 1)
+           display(pc_orig[i], title_name, corners_upright_depth)
+           img = draw_projected_box3d(img, box3d_pts_2d, color=COLORS[type_list[i]])
+           img = draw_label(img, box3d_pts_2d[0, 0], box3d_pts_2d[0, 1], type_list[i], COLORS[type_list[i]])
+       cv2.imwrite(filename, img)
 
 
 if __name__ == '__main__':
-    test_data()
+   test_data()

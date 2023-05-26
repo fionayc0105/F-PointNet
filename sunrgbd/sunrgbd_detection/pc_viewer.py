@@ -44,7 +44,7 @@ def find_roi_pc(pc, xmin, xmax, ymin, ymax):
     display(pc_in_box_fov, "test pc")
 
 
-def display(source_data, window_name):
+def display(source_data, window_name, box3d=[]):
     pc = source_data[:, 0:3]
     # 新建vtkPoints實例
     points = vtk.vtkPoints()
@@ -91,10 +91,9 @@ def display(source_data, window_name):
     axis_actor = vtk.vtkAxesActor()
     axis_actor.SetScale(5)
     renderer.AddActor(axis_actor)
-    # 畫出3d box
-    box3d = np.array([[0, 0, 3], [0, 0, 0], [2, 0, 0], [2, 0, 3], [0, 1, 3], [0, 1, 0], [2, 1, 0], [2, 1, 3]], dtype = float)
-    plot_3d_box(renderer, box3d)
-
+    # 若有指定3d box input, 則畫出3d box
+    if len(box3d) > 0:
+        plot_3d_box(renderer, box3d)
     # System Event
     iwin_render = vtk.vtkRenderWindowInteractor()
     iwin_render.SetRenderWindow(renderWnd)
