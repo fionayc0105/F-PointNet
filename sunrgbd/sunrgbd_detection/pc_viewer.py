@@ -77,22 +77,23 @@ def display(source_data, window_name):
     # 關聯mapper
     actor.SetMapper(mapper)
     actor.GetProperty().SetColor(1, 0, 0) # R,G,B
-    # Create a render window
-    render = vtk.vtkRenderer()
+    # Create a renderer window
+    renderer = vtk.vtkRenderer()
     # Insert Actor
-    render.AddActor(actor)
-    render.SetBackground(0, 0, 0)
+    renderer.AddActor(actor)
+    renderer.SetBackground(0, 0, 0)
     # Renderer Window
     renderWnd = vtk.vtkRenderWindow()
-    renderWnd.AddRenderer(render)
+    renderWnd.AddRenderer(renderer)
     renderWnd.SetSize(1200, 1200)
     renderWnd.SetWindowName(window_name)
     # 加上3軸座標軸
     axis_actor = vtk.vtkAxesActor()
     axis_actor.SetScale(5)
-    render.AddActor(axis_actor)
+    renderer.AddActor(axis_actor)
     # 畫出3d box
-    plot_3d_box(render)
+    box3d = np.array([[0, 0, 3], [0, 0, 0], [2, 0, 0], [2, 0, 3], [0, 1, 3], [0, 1, 0], [2, 1, 0], [2, 1, 3]], dtype = float)
+    plot_3d_box(renderer, box3d)
 
     # System Event
     iwin_render = vtk.vtkRenderWindowInteractor()
@@ -105,30 +106,72 @@ def display(source_data, window_name):
 
 
 # 標記出3d box的角點
-def plot_3d_box(render):
-    # 創建vtkPoints對象，存儲點的坐標
+def plot_3d_box(renderer, box3d):
+    # 創建vtkPoints對象，存儲bounding box的頂點座標
     points = vtk.vtkPoints()
-    points.InsertNextPoint(1, 0, 0)  # 第一個點的坐標
-    points.InsertNextPoint(5, 5, 5)  # 第二個點的坐標
-    # 創建vtkCellArray對象，存儲線的索引
-    lines = vtk.vtkCellArray()
-    line = vtk.vtkLine()
-    line.GetPointIds().SetId(0, 0)  # 第一條線的第一個點的索引
-    line.GetPointIds().SetId(1, 1)  # 第一條線的第二個點的索引
-    lines.InsertNextCell(line)
-    # 創建vtkPolyData對象，將點和線結合起來
+    for i in range(len(box3d)):
+        x, y, z = box3d[i]
+        points.InsertNextPoint(x, y, z);
+
+    # 創建vtkCellArray對象，定義bounding box的邊界
+    edges = vtk.vtkCellArray()
+    for k in range(0, 4):
+       for q in range(3):
+           if q == 0:
+               i, j = k, (k + 1) % 4;
+           elif q== 1:
+               i, j = k + 4, (k + 1) % 4 + 4;
+           else:
+                i, j = k, k + 4;
+           edges.InsertNextCell(2)
+           edges.InsertCellPoint(i)
+           edges.InsertCellPoint(j)
+
+    # 創建vtkPolyData對象，將點和邊結合起來
     polyData = vtk.vtkPolyData()
     polyData.SetPoints(points)
-    polyData.SetLines(lines)
+    polyData.SetLines(edges)
+
     # 創建vtkPolyDataMapper對象，將polyData映射到渲染器上
     mapper = vtk.vtkPolyDataMapper()
     mapper.SetInputData(polyData)
+
     # 創建vtkActor對象，將mapper添加到actor上
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
-    actor.GetProperty().SetColor(1.0, 0, 1.0) # 設定線的顏色
-    render.AddActor(actor)
-    return render
+    actor.GetProperty().SetColor(1.0, 1.0, 0)  # 設定線的顏色
+    # 創建vtkRenderer對象和vtkRenderWindow對象，並將actor添加到渲染器中
+    renderer.AddActor(actor)
+    return renderer
+
+
+
+
+
+
+    # # 創建vtkPoints對象，存儲點的坐標
+    # points = vtk.vtkPoints()
+    # points.InsertNextPoint(1, 0, 0)  # 第一個點的坐標
+    # points.InsertNextPoint(5, 5, 5)  # 第二個點的坐標
+    # # 創建vtkCellArray對象，存儲線的索引
+    # lines = vtk.vtkCellArray()
+    # line = vtk.vtkLine()
+    # line.GetPointIds().SetId(0, 0)  # 第一條線的第一個點的索引
+    # line.GetPointIds().SetId(1, 1)  # 第一條線的第二個點的索引
+    # lines.InsertNextCell(line)
+    # # 創建vtkPolyData對象，將點和線結合起來
+    # polyData = vtk.vtkPolyData()
+    # polyData.SetPoints(points)
+    # polyData.SetLines(lines)
+    # # 創建vtkPolyDataMapper對象，將polyData映射到渲染器上
+    # mapper = vtk.vtkPolyDataMapper()
+    # mapper.SetInputData(polyData)
+    # # 創建vtkActor對象，將mapper添加到actor上
+    # actor = vtk.vtkActor()
+    # actor.SetMapper(mapper)
+    # actor.GetProperty().SetColor(1.0, 0, 1.0) # 設定線的顏色
+    # render.AddActor(actor)
+    # return render
 
 
 if __name__ == '__main__':
