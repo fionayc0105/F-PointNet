@@ -90,6 +90,14 @@ class SUNRGBD_Calibration(object):
         # return pc2
         return pc
 
+
+    def flip_axis_x(self, pc):  # cam X,Y,Z = depth X,-Z,Y
+        pc2 = np.copy(pc)
+        pc2[:, [0, 1, 2]] = pc2[:, [0, 1, 2]]  # cam X,Y,Z = depth X,-Z,Y
+        pc2[:, 0] *= -1
+        return pc2
+
+
     def project_upright_depth_to_camera(self, pc):
         ''' project point cloud from depth coord to camera coordinate
             Input: (N,3) Output: (N,3)

@@ -210,15 +210,16 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
     objects = dataset.get_label_objects(data_idx)
     pc_upright_depth = dataset.get_depth(data_idx)
     pc_upright_depth = pc_upright_depth[:, 0:6]
+    # 點雲方向: X-right,Y-down,Z-forward
+    # 影像方向: X-right,Y-down
+    pc_upright_depth = calib.flip_axis_x(pc_upright_depth) #針對kinect v2的點雲需要做x方向的鏡像
     pc_upright_camera = np.zeros_like(pc_upright_depth)
     pc_upright_camera[:, 0:3] = calib.project_upright_depth_to_upright_camera(pc_upright_depth[:, 0:3])
     pc_upright_camera[:, 3:] = pc_upright_depth[:, 3:]
     img = dataset.get_image(data_idx)
     img_height, img_width, img_channel = img.shape
     pc_image_coord, _ = calib.project_upright_depth_to_image(pc_upright_depth)
-
-    display(pc_upright_depth, "depth pc")
-    display(pc_upright_camera, "camera pc")
+    display(pc_upright_camera, "camera pointclouds")
 
     for obj_idx in range(len(objects)):
         obj = objects[obj_idx]
@@ -230,6 +231,8 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
                 pc_image_coord[:, 1] < ymax) & (pc_image_coord[:, 1] >= ymin)
         # step1: get point cloud
         pc_in_box_fov = pc_upright_camera[box_fov_inds, :]
+
+        display(pc_in_box_fov, "input pointcloud")
 
         # step2: calculate the frustum angle and rotation angle
         frustum_angle = get_frustum_angle(box2d, calib)
@@ -243,7 +246,6 @@ def get_batch(data_idx, type_whitelist=['bed', 'table', 'sofa', 'chair', 'toilet
 
         # step4: rotate to center
         pc_in_box_fov = get_center_view_point_set(pc_in_box_fov, frustum_angle)
-        display(pc_in_box_fov, "input pc")
 
         # step5: Resample
         choice = np.random.choice(pc_in_box_fov.shape[0], 2048, replace=True)
@@ -283,7 +285,7 @@ def test_data(viz=True):
             img_filename = os.path.join(IMG_DIR, '%06d.jpg' % (batch_idx))
             img = cv2.imread(img_filename)
 
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         pc_list, onehot_list, rot_angle_list, type_list, box2d_list,  calib = get_batch(batch_idx)
         for i in range(len(pc_list)):
             batch_data = pc_list[i]
